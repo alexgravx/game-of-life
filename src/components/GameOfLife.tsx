@@ -52,12 +52,12 @@ function stepLife(alive: Uint8Array, rows: number, cols: number): Uint8Array {
 
 export default function GameOfLife() {
   const { width, height } = useWindowSize()
-  const [cellSize, setCellSize] = useState(DEFAULT_CELL_SIZE)
+  const [cellSize, _] = useState(DEFAULT_CELL_SIZE)
 
   const rows = useMemo(() => Math.max(4, Math.floor(height / cellSize)), [height, cellSize])
   const cols = useMemo(() => Math.max(4, Math.floor(width / cellSize)), [width, cellSize])
 
-  const [alive, setAlive] = useState(() => new Uint8Array(rows * cols))
+  const [alive, setAlive] = useState<Uint8Array>(() => new Uint8Array(rows * cols))
   const [isRunning, setIsRunning] = useState(false)
   const [speedMs, setSpeedMs] = useState(200)
   const [selectedPattern, setSelectedPattern] = useState<string>('None')
@@ -66,7 +66,7 @@ export default function GameOfLife() {
 
   // Reset grid when size changes
   useEffect(() => {
-    setAlive((prev) => {
+    setAlive(() => {
       const next = new Uint8Array(rows * cols)
       // Optionally preserve overlapping region (skip for simplicity)
       return next
