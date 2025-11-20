@@ -145,7 +145,7 @@ export default function GameOfLife() {
 
   return (
     <div className="relative h-screen w-screen bg-white text-black">
-      <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-full border border-black/10 bg-white/60 px-4 py-2 font-semibold shadow-lg backdrop-blur-xs">
+      <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 rounded-full border border-black/10 bg-white/60 px-5 py-2 font-semibold shadow-lg backdrop-blur-xs">
         Game of Life
       </div>
       <div className="flex h-screen w-screen items-center justify-center">
@@ -159,7 +159,7 @@ export default function GameOfLife() {
         />
       </div>
       <Controls
-        className="pointer-events-auto fixed left-1/2 bottom-4 -translate-x-1/2 w-[min(920px,calc(100vw-32px))]"
+        className="pointer-events-auto fixed bottom-4 w-full"
         isRunning={isRunning}
         speedMs={speedMs}
         onToggleRun={onToggleRun}
