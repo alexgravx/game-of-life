@@ -60,7 +60,7 @@ export default function GameOfLife() {
   const [alive, setAlive] = useState<Uint8Array>(() => new Uint8Array(rows * cols))
   const [isRunning, setIsRunning] = useState(false)
   const [speedMs, setSpeedMs] = useState(200)
-  const [selectedPattern, setSelectedPattern] = useState<string>('None')
+  const [selectedPattern, setSelectedPattern] = useState<string>('Pattern')
 
   const timerRef = useRef<number | null>(null)
 
@@ -145,7 +145,7 @@ export default function GameOfLife() {
 
   return (
     <div className="relative h-screen w-screen bg-white text-black">
-      <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-full border border-black/10 bg-white/60 px-4 py-2 font-semibold shadow-md backdrop-blur">
+      <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-full border border-black/10 bg-white/60 px-4 py-2 font-semibold shadow-lg backdrop-blur-xs">
         Game of Life
       </div>
       <div className="flex h-screen w-screen items-center justify-center">
