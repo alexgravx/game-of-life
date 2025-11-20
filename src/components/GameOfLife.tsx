@@ -18,12 +18,6 @@ function useWindowSize() {
   return size
 }
 
-function clampPatternPlacement(rows: number, cols: number, r: number, c: number) {
-  const rr = ((r % rows) + rows) % rows
-  const cc = ((c % cols) + cols) % cols
-  return { r: rr, c: cc }
-}
-
 function stepLife(alive: Uint8Array, rows: number, cols: number): Uint8Array {
   const next = new Uint8Array(alive.length)
   const index = (r: number, c: number) => r * cols + c
@@ -78,6 +72,7 @@ export default function GameOfLife() {
     }
   }, [rows, cols])
 
+  // Stop or start game loop
   useEffect(() => {
     if (!isRunning) return
     if (timerRef.current) window.clearInterval(timerRef.current)
@@ -103,22 +98,9 @@ export default function GameOfLife() {
     })
   }, [index])
 
-  const stampPattern = useCallback((name: string, r: number, c: number) => {
-    const pattern = PATTERNS[name]
-    if (!pattern || pattern.length === 0) return toggleCell(r, c)
-    setAlive((curr) => {
-      const next = curr.slice()
-      for (const [dr, dc] of pattern) {
-        const { r: rr, c: cc } = clampPatternPlacement(rows, cols, r + dr, c + dc)
-        next[index(rr, cc)] = 1
-      }
-      return next
-    })
-  }, [rows, cols, index, toggleCell])
-
   const onCellClick = useCallback((r: number, c: number) => {
-    stampPattern(selectedPattern, r, c)
-  }, [stampPattern, selectedPattern])
+    toggleCell(r, c)
+  }, [])
 
   const onToggleRun = useCallback(() => {
     setIsRunning((v) => !v)
@@ -179,7 +161,7 @@ export default function GameOfLife() {
         speedMs={speedMs}
         onToggleRun={onToggleRun}
         onReset={onReset}
-        onRandomize={() => { onRandomize(); setIsRunning(true) }}
+        onRandomize={onRandomize}
         onSpeedChange={setSpeedMs}
         patternNames={patternNames}
         selectedPattern={selectedPattern}

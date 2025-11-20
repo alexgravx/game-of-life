@@ -43,7 +43,7 @@ export default function Grid({ rows, cols, cellSize, bottomBarHeight, alive, onC
       }
     }
 
-    // Minimal grid (very light)
+    // Minimal grid
     ctx.strokeStyle = 'rgba(0,0,0,0.08)'
     ctx.lineWidth = 1
     for (let c = 0; c <= cols; c++) {
@@ -75,35 +75,38 @@ export default function Grid({ rows, cols, cellSize, bottomBarHeight, alive, onC
       const col = Math.floor(x / cellSize)
       const row = Math.floor(y / cellSize)
       if (row >= 0 && row < rows && col >= 0 && col < cols) {
-        const key = row + "," + col
+        const key = row + ',' + col
         if (!visited.has(key)) {
           visited.add(key)
           onCellClick(row, col)
         }
       }
     }
+    
     const onMouseDown = (e: MouseEvent) => {
       isDown = true
       visited = new Set<string>()
       handleCell(e.clientX, e.clientY)
     }
+
     const onMouseMove = (e: MouseEvent) => {
       if (!isDown) return
       handleCell(e.clientX, e.clientY)
     }
+
     const onMouseUp = () => {
       isDown = false
       visited.clear()
     }
+
     canvas.addEventListener('mousedown', onMouseDown)
-    window.addEventListener('mouseup', onMouseUp)
     canvas.addEventListener('mousemove', onMouseMove)
-    // Fallback: still allow a simple click
-    canvas.addEventListener('click', (e) => handleCell(e.clientX, e.clientY))
+    window.addEventListener('mouseup', onMouseUp)
+
     return () => {
       canvas.removeEventListener('mousedown', onMouseDown)
-      window.removeEventListener('mouseup', onMouseUp)
       canvas.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
     }
   }, [rows, cols, cellSize, onCellClick])
 
