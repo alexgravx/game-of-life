@@ -39,9 +39,9 @@ export default function Controls({
 
   return (
     <div className={className ?? ''}>
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-end justify-between gap-4">
           <div className={`${barClass} ms-4`}>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-3">
               <button
                 className="px-3 py-2 rounded-2xl border border-black/10 bg-white text-black hover:opacity-60 shadow-sm"
                 onClick={onToggleRun}

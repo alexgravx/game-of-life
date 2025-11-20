@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Grid from './Grid'
 import Controls from './Controls'
+import { FaInfo } from "react-icons/fa";
+import { FaRegCopyright } from "react-icons/fa";
 import { PATTERNS } from '../lib/patterns'
 
 const BOTTOM_BAR_HEIGHT = 80
@@ -17,7 +19,6 @@ function useWindowSize() {
 }
 
 function clampPatternPlacement(rows: number, cols: number, r: number, c: number) {
-  // Wrap around for placement
   const rr = ((r % rows) + rows) % rows
   const cc = ((c % cols) + cols) % cols
   return { r: rr, c: cc }
@@ -68,10 +69,8 @@ export default function GameOfLife() {
   useEffect(() => {
     setAlive(() => {
       const next = new Uint8Array(rows * cols)
-      // Optionally preserve overlapping region (skip for simplicity)
       return next
     })
-    // Stop simulation on resize for determinism
     setIsRunning(false)
     if (timerRef.current) {
       window.clearInterval(timerRef.current)
@@ -79,7 +78,6 @@ export default function GameOfLife() {
     }
   }, [rows, cols])
 
-  // Run loop
   useEffect(() => {
     if (!isRunning) return
     if (timerRef.current) window.clearInterval(timerRef.current)
@@ -145,8 +143,25 @@ export default function GameOfLife() {
 
   return (
     <div className="relative h-screen w-screen bg-white text-black">
-      <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 rounded-full border border-black/10 bg-white/60 px-5 py-2 font-semibold shadow-lg backdrop-blur-xs">
-        Game of Life
+      <div className="pointer-events-auto absolute top-4 w-full">
+        <div className="flex items-start justify-between gap-4">
+          <div className="pointer-events-none rounded-full ms-3 px-5 py-2 border border-black/10 bg-white/60  font-semibold shadow-lg backdrop-blur-xs">
+            Game of Life
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <a 
+            href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life"
+            className="rounded-full me-3 px-3 py-3 border border-black/10 bg-white text-black hover:opacity-75 shadow-sm">
+              <FaInfo />
+            </a>
+            <a 
+            href="https://github.com/alexgravx"
+            className="rounded-full me-3 px-3 py-3 border border-black/10 bg-white text-black hover:opacity-75 shadow-sm">
+              <FaRegCopyright />
+            </a>
+          </div>
+        </div>
+        
       </div>
       <div className="flex h-screen w-screen items-center justify-center">
         <Grid
