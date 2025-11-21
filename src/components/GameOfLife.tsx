@@ -4,6 +4,7 @@ import Controls from './Controls'
 import { FaInfo } from "react-icons/fa";
 import { FaRegCopyright } from "react-icons/fa";
 import { PATTERNS } from '../lib/patterns'
+import type { Pattern } from '../lib/patterns'
 
 const BOTTOM_BAR_HEIGHT = 80
 const DEFAULT_CELL_SIZE = 14
@@ -45,6 +46,22 @@ function stepLife(alive: Uint8Array, rows: number, cols: number): Uint8Array {
   return next
 }
 
+function small_patterns(pattern: Pattern, rows: number, cols: number) {
+  const horizontalNb = Math.floor(cols / 12)
+  const verticalNb = Math.floor(rows / 11)
+  const result: Pattern = [...pattern];
+
+  for (let hNb = 0; hNb <= horizontalNb; hNb++) {
+    for (let vNb = 0; vNb <= verticalNb; vNb++) {
+      if ((hNb > 0) || (vNb > 0)) {
+        let translatedPattern: Pattern = pattern.map(([x, y]) => [x + 10*vNb, y + 10*hNb]);
+        result.push(...translatedPattern);
+      }
+    }
+  }
+  return result
+}
+
 export default function GameOfLife() {
   const { width, height } = useWindowSize()
   const [cellSize, _] = useState(DEFAULT_CELL_SIZE)
@@ -61,7 +78,9 @@ export default function GameOfLife() {
 
   // Welcome pattern
   useEffect(() => {
-    const welcomePattern = PATTERNS['WelcomeMessage']
+    const isSmallScreen = width < 1400
+    const welcomePattern = isSmallScreen ? small_patterns(PATTERNS['WelcomeMessageSmall'], rows, cols) : PATTERNS['WelcomeMessage']
+
     if (welcomePattern && welcomePattern.length > 0) {
       setAlive(() => {
         const next = new Uint8Array(rows * cols)
