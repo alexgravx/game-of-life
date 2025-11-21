@@ -82,7 +82,7 @@ export default function Grid({ rows, cols, cellSize, bottomBarHeight, alive, onC
         }
       }
     }
-    
+
     const onMouseDown = (e: MouseEvent) => {
       isDown = true
       visited = new Set<string>()
@@ -99,14 +99,46 @@ export default function Grid({ rows, cols, cellSize, bottomBarHeight, alive, onC
       visited.clear()
     }
 
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        isDown = true
+        visited = new Set<string>()
+        const touch = e.touches[0]
+        handleCell(touch.clientX, touch.clientY)
+        e.preventDefault()
+      }
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDown) return
+      if (e.touches.length > 0) {
+        const touch = e.touches[0]
+        handleCell(touch.clientX, touch.clientY)
+        e.preventDefault()
+      }
+    }
+
+    const onTouchEnd = () => {
+      isDown = false
+      visited.clear()
+    }
+
     canvas.addEventListener('mousedown', onMouseDown)
     canvas.addEventListener('mousemove', onMouseMove)
     window.addEventListener('mouseup', onMouseUp)
+
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false })
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('touchend', onTouchEnd)
 
     return () => {
       canvas.removeEventListener('mousedown', onMouseDown)
       canvas.removeEventListener('mousemove', onMouseMove)
       window.removeEventListener('mouseup', onMouseUp)
+
+      canvas.removeEventListener('touchstart', onTouchStart)
+      canvas.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', onTouchEnd)
     }
   }, [rows, cols, cellSize, onCellClick])
 

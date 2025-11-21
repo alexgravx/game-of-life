@@ -59,12 +59,22 @@ export default function GameOfLife() {
 
   const timerRef = useRef<number | null>(null)
 
-  // Reset grid when size changes
+  // Welcome pattern
   useEffect(() => {
-    setAlive(() => {
-      const next = new Uint8Array(rows * cols)
-      return next
-    })
+    const welcomePattern = PATTERNS['WelcomeMessage']
+    if (welcomePattern && welcomePattern.length > 0) {
+      setAlive(() => {
+        const next = new Uint8Array(rows * cols)
+        const centerRow = Math.floor(rows / 2)
+        const centerCol = Math.floor(cols / 2)
+        for (const [dr, dc] of welcomePattern) {
+          const r = (centerRow + dr + rows) % rows
+          const c = (centerCol + dc + cols) % cols
+          next[r * cols + c] = 1
+        }
+        return next
+      })
+    }
     setIsRunning(false)
     if (timerRef.current) {
       window.clearInterval(timerRef.current)
