@@ -3,8 +3,7 @@ import Grid from './Grid'
 import Controls from './Controls'
 import { FaInfo } from "react-icons/fa";
 import { FaRegCopyright } from "react-icons/fa";
-import { PATTERNS } from '../lib/patterns'
-import type { Pattern } from '../lib/patterns'
+import { PATTERNS, generateWelcomePattern } from '../lib/patterns'
 
 const BOTTOM_BAR_HEIGHT = 80
 const DEFAULT_CELL_SIZE = 14
@@ -46,22 +45,6 @@ function stepLife(alive: Uint8Array, rows: number, cols: number): Uint8Array {
   return next
 }
 
-function small_patterns(pattern: Pattern, rows: number, cols: number) {
-  const horizontalNb = Math.floor(cols / 12)
-  const verticalNb = Math.floor(rows / 11)
-  const result: Pattern = [...pattern];
-
-  for (let hNb = 0; hNb <= horizontalNb; hNb++) {
-    for (let vNb = 0; vNb <= verticalNb; vNb++) {
-      if ((hNb > 0) || (vNb > 0)) {
-        let translatedPattern: Pattern = pattern.map(([x, y]) => [x + 10*vNb, y + 10*hNb]);
-        result.push(...translatedPattern);
-      }
-    }
-  }
-  return result
-}
-
 export default function GameOfLife() {
   const { width, height } = useWindowSize()
   const [cellSize, _] = useState(DEFAULT_CELL_SIZE)
@@ -76,10 +59,8 @@ export default function GameOfLife() {
 
   const timerRef = useRef<number | null>(null)
 
-  // Welcome pattern
   useEffect(() => {
-    const isSmallScreen = width < 1400
-    const welcomePattern = isSmallScreen ? small_patterns(PATTERNS['WelcomeMessageSmall'], rows, cols) : PATTERNS['WelcomeMessage']
+    const welcomePattern = generateWelcomePattern(rows, cols)
 
     if (welcomePattern && welcomePattern.length > 0) {
       setAlive(() => {
@@ -160,19 +141,19 @@ export default function GameOfLife() {
             Game of Life
           </div>
           <div className="flex flex-col items-center gap-2">
-            <a 
-            href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life"
-            className="rounded-full me-3 px-3 py-3 border border-black/10 bg-white text-black hover:opacity-75 shadow-sm">
+            <a
+              href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life"
+              className="rounded-full me-3 px-3 py-3 border border-black/10 bg-white text-black hover:opacity-75 shadow-sm">
               <FaInfo />
             </a>
-            <a 
-            href="https://github.com/alexgravx"
-            className="rounded-full me-3 px-3 py-3 border border-black/10 bg-white text-black hover:opacity-75 shadow-sm">
+            <a
+              href="https://github.com/alexgravx"
+              className="rounded-full me-3 px-3 py-3 border border-black/10 bg-white text-black hover:opacity-75 shadow-sm">
               <FaRegCopyright />
             </a>
           </div>
         </div>
-        
+
       </div>
       <div className="flex h-screen w-screen items-center justify-center">
         <Grid
