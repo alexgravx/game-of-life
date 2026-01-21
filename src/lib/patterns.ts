@@ -1,7 +1,7 @@
 export type Pattern = Array<[number, number]>
 
 export const PATTERNS: Record<string, Pattern> = {
-  Pattern: [],
+  Dot: [],
   Glider: [
     [0, 1], [1, 2], [2, 0], [2, 1], [2, 2],
   ],

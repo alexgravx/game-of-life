@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Grid from './Grid'
 import Controls from './Controls'
 import { FaInfo } from "react-icons/fa";
@@ -46,8 +47,15 @@ function stepLife(alive: Uint8Array, rows: number, cols: number): Uint8Array {
 }
 
 export default function GameOfLife() {
+  const navigate = useNavigate()
+
+  const handleWelcomePage = () => {
+    navigate('/welcome')
+  }
+
   const { width, height } = useWindowSize()
-  const [cellSize, _] = useState(DEFAULT_CELL_SIZE)
+  const [zoom, setZoom] = useState(1.0)
+  const cellSize = useMemo(() => DEFAULT_CELL_SIZE * zoom, [zoom])
 
   const rows = useMemo(() => Math.max(4, Math.floor(height / cellSize)), [height, cellSize])
   const cols = useMemo(() => Math.max(4, Math.floor(width / cellSize)), [width, cellSize])
@@ -55,7 +63,7 @@ export default function GameOfLife() {
   const [alive, setAlive] = useState<Uint8Array>(() => new Uint8Array(rows * cols))
   const [isRunning, setIsRunning] = useState(false)
   const [speedMs, setSpeedMs] = useState(200)
-  const [selectedPattern, setSelectedPattern] = useState<string>('Pattern')
+  const [selectedPattern, setSelectedPattern] = useState<string>('Dot')
 
   const timerRef = useRef<number | null>(null)
 
@@ -99,18 +107,26 @@ export default function GameOfLife() {
 
   const index = useCallback((r: number, c: number) => r * cols + c, [cols])
 
-  const toggleCell = useCallback((r: number, c: number) => {
+  const onCellClick = useCallback((r: number, c: number) => {
+    const pattern = PATTERNS[selectedPattern] || []
+
     setAlive((curr) => {
       const next = curr.slice()
-      const i = index(r, c)
-      next[i] = curr[i] ? 0 : 1
+
+      if (pattern.length === 0) {
+        const i = index(r, c)
+        next[i] = curr[i] ? 0 : 1
+      } else {
+        for (const [dr, dc] of pattern) {
+          const nr = (r + dr + rows) % rows
+          const nc = (c + dc + cols) % cols
+          next[index(nr, nc)] = 1
+        }
+      }
+
       return next
     })
-  }, [index])
-
-  const onCellClick = useCallback((r: number, c: number) => {
-    toggleCell(r, c)
-  }, [])
+  }, [selectedPattern, rows, cols, index])
 
   const onToggleRun = useCallback(() => {
     setIsRunning((v) => !v)
@@ -133,12 +149,21 @@ export default function GameOfLife() {
 
   const patternNames = useMemo(() => Object.keys(PATTERNS), [])
 
+  const handleZoom = useCallback((delta: number) => {
+    setZoom((prev) => Math.max(0.5, Math.min(3.0, prev + delta)))
+  }, [])
+
   return (
     <div className="relative h-screen w-screen bg-white text-black">
       <div className="pointer-events-auto absolute top-4 w-full">
         <div className="flex items-start justify-between gap-4">
-          <div className="pointer-events-none rounded-full ms-3 px-5 py-2 border border-black/10 bg-white/60  font-semibold shadow-lg backdrop-blur-xs">
-            Game of Life
+          <div className="pointer-events-auto rounded-full ms-3 px-3 py-2 border border-black/10 bg-white/60 font-semibold shadow-lg backdrop-blur-xs">
+            <button
+              onClick={handleWelcomePage}
+              className="px-6 py-2 rounded-3xl border border-black/10 bg-white text-black hover:opacity-60 shadow-lg font-semibold transition-opacity"
+            >
+              Game of Life
+            </button>
           </div>
           <div className="flex flex-col items-center gap-2">
             <a
@@ -163,10 +188,11 @@ export default function GameOfLife() {
           bottomBarHeight={BOTTOM_BAR_HEIGHT}
           alive={alive}
           onCellClick={onCellClick}
+          onZoom={handleZoom}
         />
       </div>
       <Controls
-        className="pointer-events-auto fixed bottom-4 w-full"
+        className="pointer-events-none fixed bottom-4 w-full"
         isRunning={isRunning}
         speedMs={speedMs}
         onToggleRun={onToggleRun}

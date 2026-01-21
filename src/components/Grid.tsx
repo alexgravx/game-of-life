@@ -7,9 +7,10 @@ export type GridProps = {
   bottomBarHeight: number
   alive: Uint8Array
   onCellClick: (row: number, col: number) => void
+  onZoom: (delta: number) => void
 }
 
-export default function Grid({ rows, cols, cellSize, bottomBarHeight, alive, onCellClick }: GridProps) {
+export default function Grid({ rows, cols, cellSize, bottomBarHeight, alive, onCellClick, onZoom }: GridProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
@@ -67,6 +68,7 @@ export default function Grid({ rows, cols, cellSize, bottomBarHeight, alive, onC
     if (!canvas) return
     let isDown = false
     let visited = new Set<string>()
+    let lastPinchDistance: number | null = null
 
     const handleCell = (clientX: number, clientY: number) => {
       const rect = canvas.getBoundingClientRect()
@@ -99,8 +101,24 @@ export default function Grid({ rows, cols, cellSize, bottomBarHeight, alive, onC
       visited.clear()
     }
 
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const delta = e.deltaY > 0 ? -0.1 : 0.1
+      onZoom(delta)
+    }
+
+    const getPinchDistance = (touches: TouchList) => {
+      const dx = touches[0].clientX - touches[1].clientX
+      const dy = touches[0].clientY - touches[1].clientY
+      return Math.sqrt(dx * dx + dy * dy)
+    }
+
     const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
+      if (e.touches.length === 2) {
+        // Pinch gesture
+        lastPinchDistance = getPinchDistance(e.touches)
+        e.preventDefault()
+      } else if (e.touches.length === 1) {
         isDown = true
         visited = new Set<string>()
         const touch = e.touches[0]
@@ -110,8 +128,15 @@ export default function Grid({ rows, cols, cellSize, bottomBarHeight, alive, onC
     }
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!isDown) return
-      if (e.touches.length > 0) {
+      if (e.touches.length === 2) {
+        const currentDistance = getPinchDistance(e.touches)
+        if (lastPinchDistance !== null) {
+          const delta = (currentDistance - lastPinchDistance) * 0.01
+          onZoom(delta)
+        }
+        lastPinchDistance = currentDistance
+        e.preventDefault()
+      } else if (e.touches.length === 1 && isDown) {
         const touch = e.touches[0]
         handleCell(touch.clientX, touch.clientY)
         e.preventDefault()
@@ -121,11 +146,13 @@ export default function Grid({ rows, cols, cellSize, bottomBarHeight, alive, onC
     const onTouchEnd = () => {
       isDown = false
       visited.clear()
+      lastPinchDistance = null
     }
 
     canvas.addEventListener('mousedown', onMouseDown)
     canvas.addEventListener('mousemove', onMouseMove)
     window.addEventListener('mouseup', onMouseUp)
+    canvas.addEventListener('wheel', onWheel, { passive: false })
 
     canvas.addEventListener('touchstart', onTouchStart, { passive: false })
     canvas.addEventListener('touchmove', onTouchMove, { passive: false })
@@ -135,12 +162,13 @@ export default function Grid({ rows, cols, cellSize, bottomBarHeight, alive, onC
       canvas.removeEventListener('mousedown', onMouseDown)
       canvas.removeEventListener('mousemove', onMouseMove)
       window.removeEventListener('mouseup', onMouseUp)
+      canvas.removeEventListener('wheel', onWheel)
 
       canvas.removeEventListener('touchstart', onTouchStart)
       canvas.removeEventListener('touchmove', onTouchMove)
       window.removeEventListener('touchend', onTouchEnd)
     }
-  }, [rows, cols, cellSize, onCellClick])
+  }, [rows, cols, cellSize, onCellClick, onZoom])
 
   return (
     <canvas

@@ -40,30 +40,30 @@ export default function Controls({
   return (
     <div className={className ?? ''}>
       <div className="flex items-end justify-between gap-4">
-          <div className={`${barClass} ms-4`}>
-            <div className="flex flex-col gap-3">
-              <button
-                className="px-3 py-2 rounded-2xl border border-black/10 bg-white text-black hover:opacity-60 shadow-sm"
-                onClick={onToggleRun}
-              >
-                {isRunning ? <FaPause /> : <FaPlay />}
-              </button>
-              <button
-                className="px-3 py-2 rounded-2xl border border-black/10 bg-white text-black hover:opacity-60 shadow-sm"
-                onClick={onReset}
-              >
-                <HiRefresh />
-              </button>
-              <button
-                className="px-3 py-2 rounded-2xl border border-black/10 bg-white text-black hover:opacity-60 shadow-sm"
-                onClick={onRandomize}
-              >
-                <FaRandom />
-              </button>
-            </div>
+        <div className={`${barClass} ms-4 pointer-events-auto`}>
+          <div className="flex flex-col gap-3">
+            <button
+              className="px-3 py-2 rounded-2xl border border-black/10 bg-white text-black hover:opacity-60 shadow-sm"
+              onClick={onToggleRun}
+            >
+              {isRunning ? <FaPause /> : <FaPlay />}
+            </button>
+            <button
+              className="px-3 py-2 rounded-2xl border border-black/10 bg-white text-black hover:opacity-60 shadow-sm"
+              onClick={onReset}
+            >
+              <HiRefresh />
+            </button>
+            <button
+              className="px-3 py-2 rounded-2xl border border-black/10 bg-white text-black hover:opacity-60 shadow-sm"
+              onClick={onRandomize}
+            >
+              <FaRandom />
+            </button>
+          </div>
         </div>
 
-        <div className={`${barClass} me-4`}>
+        <div className={`${barClass} me-4 pointer-events-auto`}>
           <div className="flex items-center gap-2">
             <div className="relative">
               <button
@@ -122,9 +122,8 @@ export default function Controls({
                     {patternNames.map((name) => (
                       <button
                         key={name}
-                        className={`px-3 py-2 rounded-xl text-left text-sm hover:bg-black/5 transition-colors ${
-                          selectedPattern === name ? 'bg-black/10 font-medium' : ''
-                        }`}
+                        className={`px-3 py-2 rounded-xl text-left text-sm hover:bg-black/5 transition-colors ${selectedPattern === name ? 'bg-black/10 font-medium' : ''
+                          }`}
                         onClick={() => {
                           onSelectPattern(name)
                           setShowPatternPopup(false)
