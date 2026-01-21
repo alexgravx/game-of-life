@@ -8,6 +8,8 @@ import { PATTERNS, generateWelcomePattern } from '../lib/patterns'
 
 const BOTTOM_BAR_HEIGHT = 80
 const DEFAULT_CELL_SIZE = 14
+const FIXED_GRID_ROWS = 300
+const FIXED_GRID_COLS = 300
 
 function useWindowSize() {
   const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight })
@@ -54,11 +56,39 @@ export default function GameOfLife() {
   }
 
   const { width, height } = useWindowSize()
-  const [zoom, setZoom] = useState(1.0)
-  const cellSize = useMemo(() => DEFAULT_CELL_SIZE * zoom, [zoom])
 
-  const rows = useMemo(() => Math.max(4, Math.floor(height / cellSize)), [height, cellSize])
-  const cols = useMemo(() => Math.max(4, Math.floor(width / cellSize)), [width, cellSize])
+  // Fixed grid dimensions and viewport state
+  const rows = FIXED_GRID_ROWS
+  const cols = FIXED_GRID_COLS
+
+  // Calculate minimum zoom to ensure grid always fills viewport
+  const minZoom = useMemo(() => {
+    const gridWidth = cols * DEFAULT_CELL_SIZE
+    const gridHeight = rows * DEFAULT_CELL_SIZE
+    const zoomX = width / gridWidth
+    const zoomY = height / gridHeight
+    // Use max to ensure grid covers entire viewport in both dimensions
+    return Math.max(zoomX, zoomY)
+  }, [width, height])
+
+  // Calculate initial zoom to fill viewport completely
+  const initialZoom = useMemo(() => {
+    return minZoom * 1.4
+  }, [minZoom])
+
+  const [zoom, setZoom] = useState(initialZoom)
+
+  // Initialize offsets to center the grid on the screen with the initial zoom
+  const [offsetX, setOffsetX] = useState(() => {
+    const gridWidth = cols * DEFAULT_CELL_SIZE * initialZoom
+    return (width - gridWidth) / 2
+  })
+  const [offsetY, setOffsetY] = useState(() => {
+    const gridHeight = rows * DEFAULT_CELL_SIZE * initialZoom
+    return (height - gridHeight) / 2
+  })
+
+  const cellSize = useMemo(() => DEFAULT_CELL_SIZE * zoom, [zoom])
 
   const [alive, setAlive] = useState<Uint8Array>(() => new Uint8Array(rows * cols))
   const [isRunning, setIsRunning] = useState(false)
@@ -66,29 +96,41 @@ export default function GameOfLife() {
   const [selectedPattern, setSelectedPattern] = useState<string>('Dot')
 
   const timerRef = useRef<number | null>(null)
+  const hasLoadedWelcomePattern = useRef(false)
+  const zoomRef = useRef(zoom)
+  const offsetXRef = useRef(offsetX)
+  const offsetYRef = useRef(offsetY)
+  const minZoomRef = useRef(minZoom)
 
+  // Keep refs in sync
   useEffect(() => {
-    const welcomePattern = generateWelcomePattern(rows, cols)
+    zoomRef.current = zoom
+    offsetXRef.current = offsetX
+    offsetYRef.current = offsetY
+    minZoomRef.current = minZoom
+  }, [zoom, offsetX, offsetY, minZoom])
 
-    if (welcomePattern && welcomePattern.length > 0) {
-      setAlive(() => {
-        const next = new Uint8Array(rows * cols)
-        const centerRow = Math.floor(rows / 2)
-        const centerCol = Math.floor(cols / 2)
-        for (const [dr, dc] of welcomePattern) {
-          const r = (centerRow + dr + rows) % rows
-          const c = (centerCol + dc + cols) % cols
-          next[r * cols + c] = 1
-        }
-        return next
-      })
+  // Load welcome pattern only once on initial mount
+  useEffect(() => {
+    if (!hasLoadedWelcomePattern.current) {
+      const welcomePattern = generateWelcomePattern(rows, cols)
+
+      if (welcomePattern && welcomePattern.length > 0) {
+        setAlive(() => {
+          const next = new Uint8Array(rows * cols)
+          const centerRow = Math.floor(rows / 2)
+          const centerCol = Math.floor(cols / 2)
+          for (const [dr, dc] of welcomePattern) {
+            const r = (centerRow + dr + rows) % rows
+            const c = (centerCol + dc + cols) % cols
+            next[r * cols + c] = 1
+          }
+          return next
+        })
+      }
+      hasLoadedWelcomePattern.current = true
     }
-    setIsRunning(false)
-    if (timerRef.current) {
-      window.clearInterval(timerRef.current)
-      timerRef.current = null
-    }
-  }, [rows, cols])
+  }, [])
 
   // Stop or start game loop
   useEffect(() => {
@@ -149,13 +191,46 @@ export default function GameOfLife() {
 
   const patternNames = useMemo(() => Object.keys(PATTERNS), [])
 
-  const handleZoom = useCallback((delta: number) => {
-    setZoom((prev) => Math.max(0.5, Math.min(3.0, prev + delta)))
+  const handleZoom = useCallback((delta: number, mouseX?: number, mouseY?: number) => {
+    const prevZoom = zoomRef.current
+    const newZoom = Math.max(minZoomRef.current, Math.min(3.0, prevZoom + delta))
+
+    // If mouse position is provided, adjust offset to zoom towards cursor
+    if (mouseX !== undefined && mouseY !== undefined) {
+      const zoomRatio = newZoom / prevZoom
+
+      // Calculate the new offsets to keep the point under the cursor fixed
+      const newOffsetX = mouseX - (mouseX - offsetXRef.current) * zoomRatio
+      const newOffsetY = mouseY - (mouseY - offsetYRef.current) * zoomRatio
+
+      setOffsetX(newOffsetX)
+      setOffsetY(newOffsetY)
+    }
+
+    setZoom(newZoom)
   }, [])
+
+  const handlePan = useCallback((dx: number, dy: number) => {
+    setOffsetX((prev) => {
+      const newOffset = prev + dx
+      // Constrain pan: grid edges should not go inside viewport
+      const gridWidth = cols * DEFAULT_CELL_SIZE * zoomRef.current
+      const maxOffsetX = 0
+      const minOffsetX = width - gridWidth
+      return Math.max(minOffsetX, Math.min(maxOffsetX, newOffset))
+    })
+    setOffsetY((prev) => {
+      const newOffset = prev + dy
+      const gridHeight = rows * DEFAULT_CELL_SIZE * zoomRef.current
+      const maxOffsetY = 0
+      const minOffsetY = height - gridHeight
+      return Math.max(minOffsetY, Math.min(maxOffsetY, newOffset))
+    })
+  }, [width, height])
 
   return (
     <div className="relative h-screen w-screen bg-white text-black">
-      <div className="pointer-events-auto absolute top-4 w-full">
+      <div className="pointer-events-none absolute top-4 w-full">
         <div className="flex items-start justify-between gap-4">
           <div className="pointer-events-auto rounded-full ms-3 px-3 py-2 border border-black/10 bg-white/60 font-semibold shadow-lg backdrop-blur-xs">
             <button
@@ -189,6 +264,11 @@ export default function GameOfLife() {
           alive={alive}
           onCellClick={onCellClick}
           onZoom={handleZoom}
+          onPan={handlePan}
+          offsetX={offsetX}
+          offsetY={offsetY}
+          width={width}
+          height={height}
         />
       </div>
       <Controls
