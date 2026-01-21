@@ -105,8 +105,6 @@ export default function Grid({
     let isPanning = false
     let visited = new Set<string>()
     let lastPinchDistance: number | null = null
-    let lastTouchX = 0
-    let lastTouchY = 0
     let lastMouseX = 0
     let lastMouseY = 0
 
@@ -187,10 +185,8 @@ export default function Grid({
 
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
-        // Two-finger gesture: pinch or pan
+        // Two-finger gesture: pinch zoom
         lastPinchDistance = getPinchDistance(e.touches)
-        lastTouchX = (e.touches[0].clientX + e.touches[1].clientX) / 2
-        lastTouchY = (e.touches[0].clientY + e.touches[1].clientY) / 2
         e.preventDefault()
       } else if (e.touches.length === 1) {
         // Single touch for drawing
@@ -210,21 +206,14 @@ export default function Grid({
 
         // Handle pinch zoom
         if (lastPinchDistance !== null) {
-          const delta = (currentDistance - lastPinchDistance)
+          const delta = (currentDistance - lastPinchDistance) * 0.001
           const rect = canvas.getBoundingClientRect()
           const centerX = currentX - rect.left
           const centerY = currentY - rect.top
           onZoom(delta, centerX, centerY)
         }
 
-        // Handle two-finger pan
-        const dx = currentX - lastTouchX
-        const dy = currentY - lastTouchY
-        onPan(dx, dy)
-
         lastPinchDistance = currentDistance
-        lastTouchX = currentX
-        lastTouchY = currentY
         e.preventDefault()
       } else if (e.touches.length === 1 && isDrawing) {
         const touch = e.touches[0]

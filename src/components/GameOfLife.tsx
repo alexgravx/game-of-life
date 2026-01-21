@@ -73,7 +73,7 @@ export default function GameOfLife() {
 
   // Calculate initial zoom to fill viewport completely
   const initialZoom = useMemo(() => {
-    return minZoom * 1.4
+    return minZoom * 2.4
   }, [minZoom])
 
   const [zoom, setZoom] = useState(initialZoom)
